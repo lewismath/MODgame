@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MODgame</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div id="hud">
+    <div id="score-red" class="score red-text">RED: 0</div>
+    <div id="timer">2:30</div>
+    <div id="score-blue" class="score blue-text">BLUE: 0</div>
+  </div>
+
+  <div id="main">
+    <div id="buttons-red" class="button-panel"></div>
+    <div id="graph-container">
+      <svg id="graph"></svg>
+    </div>
+    <div id="buttons-blue" class="button-panel"></div>
+  </div>
+
+  <div id="overlay" class="hidden">
+    <div id="overlay-content">
+      <h1 id="winner-text"></h1>
+      <p id="final-scores"></p>
+      <button id="play-again">Play Again</button>
+    </div>
+  </div>
+
+  <div id="start-screen">
+    <h1>MODgame</h1>
+    <p>Red player: left buttons &nbsp;|&nbsp; Blue player: right buttons</p>
+    <button id="start-btn">Start Game</button>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="/static/js/network.js"></script>
+  <script src="/static/js/buttons.js"></script>
+  <script src="/static/js/game.js"></script>
+</body>
+</html>
