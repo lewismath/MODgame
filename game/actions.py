@@ -1,9 +1,8 @@
 import time
 import numpy as np
 import networkx as nx
-from .state import GameState, COOLDOWN_DURATIONS, ACTIONS
+from .state import GameState, COOLDOWN_DURATIONS
 from .simulation import BETA_BOOST_FACTOR, GAMMA_REDUCTION_FACTOR, DECAY_DURATION
-from .network import compute_centrality
 
 SAMPLE_FRACTION = 0.20
 MIN_SAMPLE = 5
@@ -112,7 +111,7 @@ def _remove_edges(
         return []
     n_remove = max(1, len(neighbours) // 3)
     to_remove = list(rng.choice(neighbours, size=n_remove, replace=False))
-    edges = [[target, nb] for nb in to_remove]
+    edges = [[target, int(nb)] for nb in to_remove]
     G.remove_edges_from(edges)
     centrality_cache['betweenness'] = nx.betweenness_centrality(G, normalized=True)
     return edges
