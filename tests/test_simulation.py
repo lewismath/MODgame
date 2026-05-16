@@ -31,6 +31,7 @@ def test_susceptible_node_can_be_infected():
     rng = np.random.default_rng(0)
     G = generate_network(rng)
     state = GameState.create(G)
+    assert len(list(G.neighbors(0))) > 0, "Node 0 must have neighbours for this test"
     # Force all neighbours of node 0 to red with beta=1
     for nb in G.neighbors(0):
         state.node_states[nb] = 'red'
@@ -46,6 +47,7 @@ def test_neutral_first_no_direct_conversion():
     rng = np.random.default_rng(42)
     G = generate_network(rng)
     state = GameState.create(G)
+    assert len(list(G.neighbors(0))) > 0, "Node 0 must have neighbours for this test"
     state.node_states[0] = 'red'
     G.nodes[0]['gamma'] = 0.0  # prevent recovery
     for nb in G.neighbors(0):
