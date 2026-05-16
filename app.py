@@ -5,7 +5,7 @@ import time
 import numpy as np
 from datetime import datetime
 from flask import Flask, render_template
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 
 from game.network import generate_network, compute_layout, compute_centrality, network_to_dict
 from game.state import GameState, ACTIONS
@@ -27,11 +27,13 @@ _rng: np.random.Generator | None = None
 _network_dict: dict | None = None
 _initial_states: dict | None = None
 _centrality: dict | None = None
+_loop_generation: int = 0
 
 
 def _new_game():
-    global _G, _state, _rng, _network_dict, _initial_states, _centrality
-    seed = int(np.random.randint(0, 2**31))
+    global _G, _state, _rng, _network_dict, _initial_states, _centrality, _loop_generation
+    _loop_generation += 1
+    seed = int(np.random.default_rng().integers(0, 2**31))
     _rng = np.random.default_rng(seed)
     _G = generate_network(_rng)
     pos = compute_layout(_G)
@@ -44,8 +46,8 @@ def _new_game():
     _initial_states = dict(_state.node_states)
 
 
-def _simulation_loop():
-    while _state and not _state.is_over():
+def _simulation_loop(generation: int):
+    while generation == _loop_generation and _state and not _state.is_over():
         now = time.time()
         tick(_G, _state, _rng, now)
         payload = {
@@ -62,7 +64,7 @@ def _simulation_loop():
         }
         socketio.emit('state', payload)
         socketio.sleep(TICK_INTERVAL)
-    if _state:
+    if generation == _loop_generation and _state:
         _end_game()
 
 
@@ -91,7 +93,7 @@ def handle_start_game():
         'initial_states': {str(k): v for k, v in _state.node_states.items()},
         'duration': ROUND_DURATION,
     })
-    socketio.start_background_task(_simulation_loop)
+    socketio.start_background_task(_simulation_loop, _loop_generation)
 
 
 @socketio.on('action')
