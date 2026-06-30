@@ -3,4 +3,5 @@ flask-socketio==5.3.6
 eventlet==0.35.2
 networkx==3.3
 numpy==1.26.4
+gunicorn==22.0.0
 pytest==8.2.0

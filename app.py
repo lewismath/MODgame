@@ -1,6 +1,8 @@
 import eventlet
 eventlet.monkey_patch()
+import eventlet.tpool
 
+import os
 import time
 import numpy as np
 from datetime import datetime
@@ -14,7 +16,7 @@ from game.actions import apply_action
 from game.persistence import save_game
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'modgame-dev-secret'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'modgame-dev-secret')
 socketio = SocketIO(app, cors_allowed_origins='*', async_mode='eventlet')
 
 TICK_INTERVAL = 0.2   # seconds
@@ -36,9 +38,9 @@ def _new_game():
     seed = int(np.random.default_rng().integers(0, 2**31))
     _rng = np.random.default_rng(seed)
     _G = generate_network(_rng)
-    pos = compute_layout(_G)
+    pos = eventlet.tpool.execute(compute_layout, _G)
     _network_dict = network_to_dict(_G, pos)
-    _centrality = compute_centrality(_G)
+    _centrality = eventlet.tpool.execute(compute_centrality, _G)
     _state = GameState.create(_G, duration=ROUND_DURATION)
     _state.random_seed = seed
     _state.game_id = datetime.now().isoformat(timespec='seconds')
@@ -115,4 +117,6 @@ def handle_action(data):
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') != 'production'
+    socketio.run(app, host='0.0.0.0', debug=debug, use_reloader=False, port=port)

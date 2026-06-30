@@ -4,7 +4,7 @@ import numpy as np
 N_COMMUNITIES = 5
 N_PER_COMMUNITY = 35      # 175 nodes total
 WITHIN_P = 0.3
-BETWEEN_P = 0.05
+BETWEEN_P = 0.02
 BETA_MEAN, BETA_STD = 0.15, 0.05
 GAMMA_MEAN, GAMMA_STD = 0.10, 0.03
 
@@ -27,7 +27,28 @@ def generate_network(rng: np.random.Generator) -> nx.Graph:
 
 
 def compute_layout(G: nx.Graph) -> dict[int, tuple[float, float]]:
-    pos = nx.spring_layout(G, seed=42, k=1.5 / len(G) ** 0.5, iterations=100)
+    communities: dict[int, list[int]] = {}
+    for n in G.nodes():
+        communities.setdefault(int(G.nodes[n]['block']), []).append(n)
+
+    n_comm = len(communities)
+    local_scale = 0.35  # each cluster's radius as a fraction of the inter-center distance
+    pos: dict[int, tuple[float, float]] = {}
+
+    for i, c in enumerate(sorted(communities)):
+        angle = 2 * np.pi * i / n_comm
+        cx, cy = np.cos(angle), np.sin(angle)
+        nodes = communities[c]
+        local = nx.spring_layout(G.subgraph(nodes), seed=42, iterations=50)
+
+        xs = [p[0] for p in local.values()]
+        ys = [p[1] for p in local.values()]
+        extent = max(max(abs(x) for x in xs), max(abs(y) for y in ys), 1e-9)
+
+        for n, (x, y) in local.items():
+            pos[n] = (cx + (x / extent) * local_scale,
+                      cy + (y / extent) * local_scale)
+
     return {n: (float(x), float(y)) for n, (x, y) in pos.items()}
 
 

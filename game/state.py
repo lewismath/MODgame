@@ -39,11 +39,17 @@ class GameState:
         )
 
     def seed_initial_states(self, G: nx.Graph, rng: np.random.Generator, n_per_side: int = 3):
-        nodes = list(G.nodes())
-        chosen = rng.choice(nodes, size=n_per_side * 2, replace=False)
-        for n in chosen[:n_per_side]:
+        communities: dict[int, list[int]] = {}
+        for n in G.nodes():
+            communities.setdefault(int(G.nodes[n]['block']), []).append(n)
+        comm_ids = sorted(communities)
+        n_comm = len(comm_ids)
+        # Pick two communities as far apart as possible on the circle layout
+        red_comm = comm_ids[0]
+        blue_comm = comm_ids[(n_comm + 1) // 2]
+        for n in rng.choice(communities[red_comm], size=min(n_per_side, len(communities[red_comm])), replace=False):
             self.node_states[int(n)] = 'red'
-        for n in chosen[n_per_side:]:
+        for n in rng.choice(communities[blue_comm], size=min(n_per_side, len(communities[blue_comm])), replace=False):
             self.node_states[int(n)] = 'blue'
 
     def scores(self) -> dict[str, int]:
